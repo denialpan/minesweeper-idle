@@ -19,6 +19,35 @@
             display: block;
         }
 
+        #board {
+            position: relative;
+            width: 100%;
+        }
+
+        #game-result {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgb(0 0 0 / 20%);
+            text-align: center;
+            font-size: calc(1rem * var(--control-scale));
+        }
+
+        #game-result[hidden] {
+            display: none;
+        }
+
+        #game-result p {
+            margin: 0;
+            font-weight: bold;
+            background-color: white;
+            color: black;
+        }
+
         #zoom-controls {
             display: grid;
             gap: 0.5rem;
@@ -58,7 +87,13 @@
         <h1>Minesweeper</h1>
         <p>Tiles clicked: <output id="tiles-clicked">0</output></p>
         <div id="game">
-            <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
+            <div id="board">
+                <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
+                <div id="game-result" role="status" aria-live="polite" hidden>
+                    <p id="game-result-message"></p>
+                    <button id="reset-game" type="button">reset</button>
+                </div>
+            </div>
             <div id="zoom-controls">
                 <div id="zoom-row">
                     <label for="zoom-input">Zoom:</label>

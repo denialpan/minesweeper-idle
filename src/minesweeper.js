@@ -2,19 +2,24 @@ const GRID_SIZE = 9;
 const MINE_COUNT = 10;
 const CELL_COUNT = GRID_SIZE * GRID_SIZE;
 
-const mineLocations = new Set();
+const createMineGrid = () => {
+    const mineLocations = new Set();
 
-while (mineLocations.size < MINE_COUNT) {
-    mineLocations.add(Math.floor(Math.random() * CELL_COUNT));
-}
+    while (mineLocations.size < MINE_COUNT) {
+        mineLocations.add(Math.floor(Math.random() * CELL_COUNT));
+    }
 
-const mineGrid = Array.from(
-    { length: CELL_COUNT },
-    (_, index) => mineLocations.has(index),
-);
+    return Array.from(
+        { length: CELL_COUNT },
+        (_, index) => mineLocations.has(index),
+    );
+};
+
+let mineGrid = createMineGrid();
 const revealedCells = Array(CELL_COUNT).fill(false);
 const cellMarks = Array(CELL_COUNT).fill(null);
 let gameOver = false;
+let gameWon = false;
 let hitMineIndex = -1;
 
 const numberTiles = [
@@ -110,6 +115,12 @@ const revealCell = (index) => {
 
 const tileForCell = (index) => {
     if (gameOver) {
+        if (gameWon) {
+            return mineGrid[index]
+                ? tile_flag
+                : numberTiles[countAdjacentMines(index)];
+        }
+
         if (mineGrid[index]) {
             return index === hitMineIndex ? tile_mine_hit : tile_mine;
         }
@@ -201,6 +212,9 @@ const chordCell = (index) => {
 const minesweeperCanvas = document.getElementById("minesweeper");
 const game = document.getElementById("game");
 const tilesClickedOutput = document.getElementById("tiles-clicked");
+const gameResult = document.getElementById("game-result");
+const gameResultMessage = document.getElementById("game-result-message");
+const resetGameButton = document.getElementById("reset-game");
 const zoomInput = document.getElementById("zoom-input");
 const resetZoomButton = document.getElementById("reset-zoom");
 const setDefaultZoomButton = document.getElementById("set-default-zoom");
@@ -211,6 +225,31 @@ let tilesClicked = 0;
 const countTileClick = () => {
     tilesClicked += 1;
     tilesClickedOutput.value = tilesClicked;
+};
+
+const finishGame = (won) => {
+    gameOver = true;
+    gameWon = won;
+    gameResultMessage.textContent = won ? "You win!" : "You lost!";
+    gameResult.hidden = false;
+};
+
+const hasWon = () => mineGrid.every(
+    (hasMine, index) => hasMine || revealedCells[index],
+);
+
+const resetGame = () => {
+    mineGrid = createMineGrid();
+    revealedCells.fill(false);
+    cellMarks.fill(null);
+    gameOver = false;
+    gameWon = false;
+    hitMineIndex = -1;
+    tilesClicked = 0;
+    tilesClickedOutput.value = tilesClicked;
+    gameResultMessage.textContent = "";
+    gameResult.hidden = true;
+    renderMineGrid();
 };
 
 const updateCanvasZoom = (requestedZoom, formatInput = true) => {
@@ -251,6 +290,8 @@ setDefaultZoomButton.addEventListener("click", () => {
     resetZoomButton.title = `Reset zoom to ${defaultZoom.toFixed(2)}×`;
 });
 
+resetGameButton.addEventListener("click", resetGame);
+
 updateCanvasZoom(currentZoom);
 resetZoomButton.title = `Reset zoom to ${defaultZoom.toFixed(2)}×`;
 
@@ -274,6 +315,12 @@ minesweeperCanvas.addEventListener("mousedown", (event) => {
         revealCell(index);
     } else {
         chordCell(index);
+    }
+
+    if (gameOver) {
+        finishGame(false);
+    } else if (hasWon()) {
+        finishGame(true);
     }
 
     renderMineGrid();
