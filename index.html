@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter</title>
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Counter</h1>
+        <p id="counter">0</p>
+        <canvas id="tiles" width="256" height="16" aria-label="Minesweeper tiles"></canvas>
+        <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
+    </main>
+
+    <script src="src/script.js"></script>
+    <script src="src/minesweeper.js"></script>
+</body>
+</html>
