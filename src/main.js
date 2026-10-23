@@ -16,6 +16,10 @@
     );
     const game = namespace.createMinesweeperGame();
     const renderer = namespace.createCanvasRenderer(minesweeperCanvas);
+    const solver = namespace.createRandomSolver({
+        getState: game.getPublicState,
+        applyAction: game.applyAction,
+    });
     let currentZoom = config.zoom;
     let defaultZoom = config.defaultZoom;
 
@@ -100,4 +104,5 @@
     game.subscribe(updateView);
     updateCanvasZoom(currentZoom);
     updateResetZoomTitle();
+    solver.start();
 })();
