@@ -199,6 +199,58 @@ const chordCell = (index) => {
 };
 
 const minesweeperCanvas = document.getElementById("minesweeper");
+const game = document.getElementById("game");
+const zoomInput = document.getElementById("zoom-input");
+const resetZoomButton = document.getElementById("reset-zoom");
+const setDefaultZoomButton = document.getElementById("set-default-zoom");
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 5;
+let currentZoom = 1;
+let defaultZoom = 1;
+
+const updateCanvasZoom = (requestedZoom, formatInput = true) => {
+    const boundedZoom = Math.min(
+        MAX_ZOOM,
+        Math.max(MIN_ZOOM, requestedZoom),
+    );
+    const zoom = Math.trunc(boundedZoom * 100 + 1e-9) / 100;
+    const formattedZoom = zoom.toFixed(2);
+    currentZoom = zoom;
+
+    if (formatInput) {
+        zoomInput.value = formattedZoom;
+    }
+
+    minesweeperCanvas.style.width = `${minesweeperCanvas.width * zoom}px`;
+    minesweeperCanvas.style.height = `${minesweeperCanvas.height * zoom}px`;
+    game.style.width = `${minesweeperCanvas.width * zoom}px`;
+    game.style.setProperty("--control-scale", Math.min(1, zoom));
+};
+
+zoomInput.addEventListener("input", () => {
+    if (zoomInput.value !== "" && zoomInput.validity.valid) {
+        updateCanvasZoom(zoomInput.valueAsNumber, false);
+    }
+});
+
+zoomInput.addEventListener("change", () => {
+    if (Number.isFinite(zoomInput.valueAsNumber)) {
+        updateCanvasZoom(zoomInput.valueAsNumber);
+    } else {
+        updateCanvasZoom(currentZoom);
+    }
+});
+
+resetZoomButton.addEventListener("click", () => {
+    updateCanvasZoom(defaultZoom);
+});
+
+setDefaultZoomButton.addEventListener("click", () => {
+    defaultZoom = currentZoom;
+    resetZoomButton.title = `Reset zoom to ${defaultZoom.toFixed(2)}×`;
+});
+
+updateCanvasZoom(currentZoom);
 
 minesweeperCanvas.addEventListener("mousedown", (event) => {
     if (event.button !== 0 && event.button !== 1) {

@@ -9,14 +9,72 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
+
+        #game {
+            --control-scale: 1;
+            width: 144px;
+        }
+
+        #minesweeper {
+            display: block;
+        }
+
+        #zoom-controls {
+            display: grid;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        #zoom-controls label {
+            text-align: center;
+        }
+
+        #zoom-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: calc(0.25rem * var(--control-scale));
+            width: 100%;
+            font-size: calc(1rem * var(--control-scale));
+        }
+
+        #zoom-controls input {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        #zoom-row button {
+            min-width: 0;
+            padding: 0.125rem 0.25rem;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
     <main>
         <h1>Counter</h1>
         <p id="counter">0</p>
-        <canvas id="tiles" width="256" height="16" aria-label="Minesweeper tiles"></canvas>
-        <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
+        <div id="game">
+            <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
+            <div id="zoom-controls">
+                <div id="zoom-row">
+                    <label for="zoom-input">Zoom:</label>
+                    <input
+                        id="zoom-input"
+                        type="number"
+                        min="0.5"
+                        max="5"
+                        value="1"
+                        step="0.01"
+                    >
+                    <button id="reset-zoom" type="button" title="Reset zoom" aria-label="Reset zoom">↺</button>
+                    <button id="set-default-zoom" type="button" title="Set current zoom as default" aria-label="Set current zoom as default">★</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="src/script.js"></script>

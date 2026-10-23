@@ -30,45 +30,6 @@ const tile_questionable_blank = tileAt(1, 3);
 const tile_mine = tileAt(2, 3);
 const tile_mine_hit = tileAt(3, 3);
 
-const tiles = [
-    tile_1,
-    tile_2,
-    tile_3,
-    tile_4,
-    tile_5,
-    tile_6,
-    tile_7,
-    tile_8,
-    tile_0,
-    tile_blank,
-    tile_flag,
-    tile_mine_wrong,
-    tile_questionable,
-    tile_questionable_blank,
-    tile_mine,
-    tile_mine_hit,
-];
-
-textureMap.addEventListener("load", () => {
-    const tilesCanvas = document.getElementById("tiles");
-    const context = tilesCanvas.getContext("2d");
-    context.imageSmoothingEnabled = false;
-
-    tiles.forEach((tile, index) => {
-        context.drawImage(
-            tile.image,
-            tile.x,
-            tile.y,
-            tile.width,
-            tile.height,
-            index * TILE_SIZE,
-            0,
-            TILE_SIZE,
-            TILE_SIZE,
-        );
-    });
-});
-
 setInterval(() => {
     counter += 1;
     counterElement.textContent = counter;
