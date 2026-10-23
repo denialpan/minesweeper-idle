@@ -204,10 +204,8 @@ const tilesClickedOutput = document.getElementById("tiles-clicked");
 const zoomInput = document.getElementById("zoom-input");
 const resetZoomButton = document.getElementById("reset-zoom");
 const setDefaultZoomButton = document.getElementById("set-default-zoom");
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 5;
-let currentZoom = 1;
-let defaultZoom = 1;
+let currentZoom = gameConfig.zoom;
+let defaultZoom = gameConfig.defaultZoom;
 let tilesClicked = 0;
 
 const countTileClick = () => {
@@ -216,11 +214,7 @@ const countTileClick = () => {
 };
 
 const updateCanvasZoom = (requestedZoom, formatInput = true) => {
-    const boundedZoom = Math.min(
-        MAX_ZOOM,
-        Math.max(MIN_ZOOM, requestedZoom),
-    );
-    const zoom = Math.trunc(boundedZoom * 100 + 1e-9) / 100;
+    const zoom = gameConfig.setZoom(requestedZoom);
     const formattedZoom = zoom.toFixed(2);
     currentZoom = zoom;
 
@@ -253,11 +247,12 @@ resetZoomButton.addEventListener("click", () => {
 });
 
 setDefaultZoomButton.addEventListener("click", () => {
-    defaultZoom = currentZoom;
+    defaultZoom = gameConfig.setDefaultZoom(currentZoom);
     resetZoomButton.title = `Reset zoom to ${defaultZoom.toFixed(2)}×`;
 });
 
 updateCanvasZoom(currentZoom);
+resetZoomButton.title = `Reset zoom to ${defaultZoom.toFixed(2)}×`;
 
 minesweeperCanvas.addEventListener("mousedown", (event) => {
     if (event.button !== 0 && event.button !== 1) {
