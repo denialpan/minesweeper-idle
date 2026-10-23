@@ -1,10 +1,11 @@
-const gameConfig = (() => {
-    const STORAGE_KEY = "minesweeper-idle-config";
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 5;
-    const DEFAULT_ZOOM = 1;
+(() => {
+    const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
+    const storageKey = "minesweeper-idle-config";
+    const minZoom = 0.5;
+    const maxZoom = 5;
+    const builtInZoom = 1;
 
-    const normalizeZoom = (value, fallback = DEFAULT_ZOOM) => {
+    const normalizeZoom = (value, fallback = builtInZoom) => {
         const numericValue = Number(value);
 
         if (!Number.isFinite(numericValue)) {
@@ -12,20 +13,20 @@ const gameConfig = (() => {
         }
 
         const boundedValue = Math.min(
-            MAX_ZOOM,
-            Math.max(MIN_ZOOM, numericValue),
+            maxZoom,
+            Math.max(minZoom, numericValue),
         );
 
         return Math.trunc(boundedValue * 100 + 1e-9) / 100;
     };
 
     const values = {
-        zoom: DEFAULT_ZOOM,
-        defaultZoom: DEFAULT_ZOOM,
+        zoom: builtInZoom,
+        defaultZoom: builtInZoom,
     };
 
     try {
-        const storedValues = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        const storedValues = JSON.parse(localStorage.getItem(storageKey));
 
         if (storedValues && typeof storedValues === "object") {
             values.zoom = normalizeZoom(storedValues.zoom);
@@ -37,15 +38,15 @@ const gameConfig = (() => {
 
     const save = () => {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+            localStorage.setItem(storageKey, JSON.stringify(values));
         } catch {
             // The game remains usable when local storage is unavailable.
         }
     };
 
-    return Object.freeze({
-        minZoom: MIN_ZOOM,
-        maxZoom: MAX_ZOOM,
+    namespace.config = Object.freeze({
+        minZoom,
+        maxZoom,
         normalizeZoom,
 
         get zoom() {
