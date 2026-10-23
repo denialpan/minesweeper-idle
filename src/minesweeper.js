@@ -200,6 +200,7 @@ const chordCell = (index) => {
 
 const minesweeperCanvas = document.getElementById("minesweeper");
 const game = document.getElementById("game");
+const tilesClickedOutput = document.getElementById("tiles-clicked");
 const zoomInput = document.getElementById("zoom-input");
 const resetZoomButton = document.getElementById("reset-zoom");
 const setDefaultZoomButton = document.getElementById("set-default-zoom");
@@ -207,6 +208,12 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 5;
 let currentZoom = 1;
 let defaultZoom = 1;
+let tilesClicked = 0;
+
+const countTileClick = () => {
+    tilesClicked += 1;
+    tilesClickedOutput.value = tilesClicked;
+};
 
 const updateCanvasZoom = (requestedZoom, formatInput = true) => {
     const boundedZoom = Math.min(
@@ -261,6 +268,14 @@ minesweeperCanvas.addEventListener("mousedown", (event) => {
     const index = cellIndexFromMouseEvent(event);
 
     if (event.button === 0) {
+        if (
+            !gameOver &&
+            !revealedCells[index] &&
+            cellMarks[index] === null
+        ) {
+            countTileClick();
+        }
+
         revealCell(index);
     } else {
         chordCell(index);

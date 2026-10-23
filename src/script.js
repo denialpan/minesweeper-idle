@@ -1,6 +1,3 @@
-const counterElement = document.getElementById("counter");
-let counter = 0;
-
 const textureMap = new Image();
 textureMap.src = "assets/texturemap.png";
 
@@ -29,8 +26,3 @@ const tile_questionable = tileAt(0, 3);
 const tile_questionable_blank = tileAt(1, 3);
 const tile_mine = tileAt(2, 3);
 const tile_mine_hit = tileAt(3, 3);
-
-setInterval(() => {
-    counter += 1;
-    counterElement.textContent = counter;
-}, 100);
