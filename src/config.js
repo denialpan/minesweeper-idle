@@ -23,6 +23,7 @@
     const values = {
         zoom: builtInZoom,
         defaultZoom: builtInZoom,
+        solverEnabled: true,
     };
 
     try {
@@ -31,6 +32,10 @@
         if (storedValues && typeof storedValues === "object") {
             values.zoom = normalizeZoom(storedValues.zoom);
             values.defaultZoom = normalizeZoom(storedValues.defaultZoom);
+
+            if (typeof storedValues.solverEnabled === "boolean") {
+                values.solverEnabled = storedValues.solverEnabled;
+            }
         }
     } catch {
         // Keep the built-in defaults when storage is unavailable or invalid.
@@ -57,6 +62,10 @@
             return values.defaultZoom;
         },
 
+        get solverEnabled() {
+            return values.solverEnabled;
+        },
+
         setZoom(value) {
             values.zoom = normalizeZoom(value, values.zoom);
             save();
@@ -67,6 +76,12 @@
             values.defaultZoom = normalizeZoom(value, values.defaultZoom);
             save();
             return values.defaultZoom;
+        },
+
+        setSolverEnabled(value) {
+            values.solverEnabled = Boolean(value);
+            save();
+            return values.solverEnabled;
         },
     });
 })();

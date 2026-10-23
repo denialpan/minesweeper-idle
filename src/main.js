@@ -3,7 +3,7 @@
     const { config } = namespace;
     const minesweeperCanvas = document.getElementById("minesweeper");
     const gameElement = document.getElementById("game");
-    const tilesClickedOutput = document.getElementById("tiles-clicked");
+    const minesDefusedOutput = document.getElementById("mines-defused");
     const gameResult = document.getElementById("game-result");
     const gameResultMessage = document.getElementById(
         "game-result-message",
@@ -14,7 +14,9 @@
     const setDefaultZoomButton = document.getElementById(
         "set-default-zoom",
     );
+    const solverEnabledInput = document.getElementById("solver-enabled");
     const game = namespace.createMinesweeperGame();
+    const economy = namespace.createMinesEconomy();
     const renderer = namespace.createCanvasRenderer(minesweeperCanvas);
     const solver = namespace.createRandomSolver({
         getState: game.getPublicState,
@@ -22,6 +24,7 @@
     });
     let currentZoom = config.zoom;
     let defaultZoom = config.defaultZoom;
+    let rewardApplied = false;
 
     const updateResetZoomTitle = () => {
         resetZoomButton.title = (
@@ -51,12 +54,17 @@
 
     const updateView = (state) => {
         renderer.render(state);
-        tilesClickedOutput.value = state.tilesClicked;
 
         if (state.status === "playing") {
+            rewardApplied = false;
             gameResultMessage.textContent = "";
             gameResult.hidden = true;
             return;
+        }
+
+        if (!rewardApplied) {
+            economy.addMinesDefused(state.minesDefusedReward);
+            rewardApplied = true;
         }
 
         gameResultMessage.textContent = state.status === "won"
@@ -95,14 +103,33 @@
         game.reset();
     });
 
+    solverEnabledInput.addEventListener("change", () => {
+        const enabled = config.setSolverEnabled(
+            solverEnabledInput.checked,
+        );
+
+        if (enabled) {
+            solver.start();
+        } else {
+            solver.stop();
+        }
+    });
+
     namespace.createMouseController(
         minesweeperCanvas,
         game.getPublicState,
         game.applyAction,
     );
 
+    economy.subscribe((minesDefused) => {
+        minesDefusedOutput.value = minesDefused;
+    });
     game.subscribe(updateView);
     updateCanvasZoom(currentZoom);
     updateResetZoomTitle();
-    solver.start();
+    solverEnabledInput.checked = config.solverEnabled;
+
+    if (config.solverEnabled) {
+        solver.start();
+    }
 })();

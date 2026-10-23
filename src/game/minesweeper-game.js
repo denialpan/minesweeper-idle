@@ -41,6 +41,8 @@
         mineCount = 10,
         random = Math.random,
     } = {}) => {
+        const incorrectFlagPenalty = 2;
+        const hitMinePenaltyRate = 0.4;
         const cellCount = width * height;
         const listeners = new Set();
         let mineGrid;
@@ -48,7 +50,7 @@
         let cellMarks;
         let status;
         let hitMineIndex;
-        let tilesClicked;
+        let minesDefusedReward;
 
         const generateBoard = () => {
             mineGrid = namespace.createMineGrid({
@@ -61,7 +63,38 @@
             cellMarks = Array(cellCount).fill(null);
             status = "playing";
             hitMineIndex = -1;
-            tilesClicked = 0;
+            minesDefusedReward = 0;
+        };
+
+        const countProperlyFlaggedMines = () => mineGrid.reduce(
+            (total, hasMine, index) => (
+                total + Number(hasMine && cellMarks[index] === "flag")
+            ),
+            0,
+        );
+
+        const countIncorrectlyFlaggedCells = () => mineGrid.reduce(
+            (total, hasMine, index) => (
+                total + Number(!hasMine && cellMarks[index] === "flag")
+            ),
+            0,
+        );
+
+        const finishGame = (outcome) => {
+            status = outcome;
+            const correctFlagReward = countProperlyFlaggedMines();
+            const incorrectFlagsPenalty = (
+                countIncorrectlyFlaggedCells() * incorrectFlagPenalty
+            );
+            const hitMinePenalty = outcome === "lost"
+                ? Math.ceil(mineCount * hitMinePenaltyRate)
+                : 0;
+
+            minesDefusedReward = (
+                correctFlagReward -
+                incorrectFlagsPenalty -
+                hitMinePenalty
+            );
         };
 
         const countAdjacentMines = (index) => getAdjacentIndexes(
@@ -87,8 +120,8 @@
             cellMarks[index] = null;
 
             if (mineGrid[index]) {
-                status = "lost";
                 hitMineIndex = index;
+                finishGame("lost");
                 return true;
             }
 
@@ -114,14 +147,10 @@
                 return false;
             }
 
-            if (cellMarks[index] === null) {
-                tilesClicked += 1;
-            }
-
             const changed = revealFrom(index);
 
             if (status === "playing" && hasWon()) {
-                status = "won";
+                finishGame("won");
             }
 
             return changed;
@@ -154,7 +183,7 @@
             }
 
             if (status === "playing" && hasWon()) {
-                status = "won";
+                finishGame("won");
             }
 
             return changed;
@@ -223,7 +252,7 @@
             height,
             mineCount,
             status,
-            tilesClicked,
+            minesDefusedReward,
             cells: Array.from(
                 { length: cellCount },
                 (_, index) => getCellState(index),

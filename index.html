@@ -80,12 +80,22 @@
             padding: 0.125rem 0.25rem;
             box-sizing: border-box;
         }
+
+        #solver-control {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            font-size: calc(1rem * var(--control-scale));
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
     <main>
         <h1>Minesweeper</h1>
-        <p>Tiles clicked: <output id="tiles-clicked">0</output></p>
+        <p>Mines defused: <output id="mines-defused">0</output></p>
         <div id="game">
             <div id="board">
                 <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
@@ -109,6 +119,10 @@
                     <button id="set-default-zoom" type="button" title="Set current zoom as default" aria-label="Set current zoom as default">★</button>
                 </div>
             </div>
+            <label id="solver-control" for="solver-enabled">
+                <input id="solver-enabled" type="checkbox" checked>
+                auto solver
+            </label>
         </div>
     </main>
 
@@ -118,6 +132,7 @@
     <script src="src/rendering/canvas-renderer.js"></script>
     <script src="src/input/mouse-controller.js"></script>
     <script src="src/solvers/random-solver.js"></script>
+    <script src="src/economy/mines-economy.js"></script>
     <script src="src/config.js"></script>
     <script src="src/main.js"></script>
 </body>
