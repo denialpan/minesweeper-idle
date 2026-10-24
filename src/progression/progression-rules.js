@@ -4,12 +4,16 @@
     const incorrectFlagPenalty = 2;
     const hitMinePenaltyRate = 0.4;
 
+    const calculateBoardCompletionReward = (startingMines) => Math.floor(
+        startingMines * boardCompletionRewardRate,
+    );
+
     namespace.progressionRules = Object.freeze({
+        calculateBoardCompletionReward,
+
         calculateMinesDefusedReward(result) {
             const boardCompletionReward = result.outcome === "won"
-                ? Math.floor(
-                    result.startingMines * boardCompletionRewardRate,
-                )
+                ? calculateBoardCompletionReward(result.startingMines)
                 : 0;
             const correctFlagReward = result.correctlyFlagged;
             const incorrectFlagsPenalty = (

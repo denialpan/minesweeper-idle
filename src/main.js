@@ -106,12 +106,26 @@
 
         if (!rewardApplied) {
             const { reward } = progression.recordGame(state.result);
-            const signedReward = reward >= 0 ? `+${reward}` : reward;
-            const outcome = state.status === "won" ? "won" : "lost";
 
-            actionConsole.log(
-                `Game ${outcome} - mines defused: ${signedReward}.`,
-            );
+            if (state.status === "won") {
+                const completionReward = (
+                    namespace.progressionRules
+                        .calculateBoardCompletionReward(
+                            state.result.startingMines,
+                        )
+                );
+
+                actionConsole.log(
+                    "successfully defused! " + `+${state.result.correctlyFlagged}, bonus ` + `+${completionReward}.`
+                );
+            } else {
+                const loss = Math.max(0, -reward);
+
+                actionConsole.log(
+                    `mine hit! it blew up ${loss} mines from your supply.`,
+                );
+            }
+
             rewardApplied = true;
         }
 
