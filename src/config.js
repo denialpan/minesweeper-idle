@@ -24,6 +24,7 @@
         zoom: builtInZoom,
         defaultZoom: builtInZoom,
         solverEnabled: true,
+        autoResetEnabled: false,
     };
 
     try {
@@ -35,6 +36,10 @@
 
             if (typeof storedValues.solverEnabled === "boolean") {
                 values.solverEnabled = storedValues.solverEnabled;
+            }
+
+            if (typeof storedValues.autoResetEnabled === "boolean") {
+                values.autoResetEnabled = storedValues.autoResetEnabled;
             }
         }
     } catch {
@@ -66,6 +71,10 @@
             return values.solverEnabled;
         },
 
+        get autoResetEnabled() {
+            return values.autoResetEnabled;
+        },
+
         setZoom(value) {
             values.zoom = normalizeZoom(value, values.zoom);
             save();
@@ -82,6 +91,12 @@
             values.solverEnabled = Boolean(value);
             save();
             return values.solverEnabled;
+        },
+
+        setAutoResetEnabled(value) {
+            values.autoResetEnabled = Boolean(value);
+            save();
+            return values.autoResetEnabled;
         },
     });
 })();

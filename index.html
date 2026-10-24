@@ -4,104 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minesweeper</title>
-    <style>
-        canvas {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-
-        #game {
-            --control-scale: 1;
-            width: 144px;
-        }
-
-        #minesweeper {
-            display: block;
-        }
-
-        #board {
-            position: relative;
-            width: 100%;
-        }
-
-        #game-result {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            background: rgb(0 0 0 / 20%);
-            text-align: center;
-            font-size: calc(1rem * var(--control-scale));
-        }
-
-        #game-result[hidden] {
-            display: none;
-        }
-
-        #game-result p {
-            margin: 0;
-            font-weight: bold;
-            background-color: white;
-            color: black;
-        }
-
-        #zoom-controls {
-            display: grid;
-            gap: 0.5rem;
-            width: 100%;
-            margin-top: 0.5rem;
-            box-sizing: border-box;
-        }
-
-        #zoom-controls label {
-            text-align: center;
-        }
-
-        #zoom-row {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto auto;
-            align-items: center;
-            gap: calc(0.25rem * var(--control-scale));
-            width: 100%;
-            font-size: calc(1rem * var(--control-scale));
-        }
-
-        #zoom-controls input {
-            width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-        }
-
-        #zoom-row button {
-            min-width: 0;
-            padding: 0.125rem 0.25rem;
-            box-sizing: border-box;
-        }
-
-        #solver-control {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            width: 100%;
-            margin-top: 0.5rem;
-            font-size: calc(1rem * var(--control-scale));
-            box-sizing: border-box;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <section
+        id="action-console"
+        role="log"
+        aria-label="Recent game actions"
+        aria-live="polite"
+    ></section>
     <main>
-        <h1>Minesweeper</h1>
         <p>Mines defused: <output id="mines-defused">0</output></p>
         <div id="game">
             <div id="board">
                 <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
                 <div id="game-result" role="status" aria-live="polite" hidden>
                     <p id="game-result-message"></p>
-                    <button id="reset-game" type="button">reset</button>
+                    <button id="reset-game" type="button">new board</button>
                 </div>
             </div>
             <div id="zoom-controls">
@@ -119,9 +38,21 @@
                     <button id="set-default-zoom" type="button" title="Set current zoom as default" aria-label="Set current zoom as default">★</button>
                 </div>
             </div>
+            <div id="upgrade-controls">
+                <button id="unlock-random-solver" type="button">
+                    Unlock random solver (10 mines)
+                </button>
+                <button id="unlock-auto-reset" type="button">
+                    Unlock auto reset (10 mines)
+                </button>
+            </div>
             <label id="solver-control" for="solver-enabled">
-                <input id="solver-enabled" type="checkbox" checked>
+                <input id="solver-enabled" type="checkbox" checked disabled>
                 auto solver
+            </label>
+            <label id="auto-reset-control" for="auto-reset-enabled">
+                <input id="auto-reset-enabled" type="checkbox" disabled>
+                auto reset after 1 second
             </label>
         </div>
     </main>
@@ -130,9 +61,12 @@
     <script src="src/game/minesweeper-game.js"></script>
     <script src="src/rendering/sprites.js"></script>
     <script src="src/rendering/canvas-renderer.js"></script>
+    <script src="src/rendering/action-console.js"></script>
     <script src="src/input/mouse-controller.js"></script>
     <script src="src/solvers/random-solver.js"></script>
-    <script src="src/economy/mines-economy.js"></script>
+    <script src="src/progression/upgrade-definitions.js"></script>
+    <script src="src/progression/progression-rules.js"></script>
+    <script src="src/progression/progression-store.js"></script>
     <script src="src/config.js"></script>
     <script src="src/main.js"></script>
 </body>

@@ -3,6 +3,7 @@
     const { config } = namespace;
     const minesweeperCanvas = document.getElementById("minesweeper");
     const gameElement = document.getElementById("game");
+    const actionConsoleElement = document.getElementById("action-console");
     const minesDefusedOutput = document.getElementById("mines-defused");
     const gameResult = document.getElementById("game-result");
     const gameResultMessage = document.getElementById(
@@ -14,10 +15,22 @@
     const setDefaultZoomButton = document.getElementById(
         "set-default-zoom",
     );
+    const unlockRandomSolverButton = document.getElementById(
+        "unlock-random-solver",
+    );
+    const unlockAutoResetButton = document.getElementById(
+        "unlock-auto-reset",
+    );
     const solverEnabledInput = document.getElementById("solver-enabled");
+    const autoResetEnabledInput = document.getElementById(
+        "auto-reset-enabled",
+    );
     const game = namespace.createMinesweeperGame();
-    const economy = namespace.createMinesEconomy();
+    const progression = namespace.createProgressionStore();
     const renderer = namespace.createCanvasRenderer(minesweeperCanvas);
+    const actionConsole = namespace.createActionConsole(
+        actionConsoleElement,
+    );
     const solver = namespace.createRandomSolver({
         getState: game.getPublicState,
         applyAction: game.applyAction,
@@ -25,6 +38,34 @@
     let currentZoom = config.zoom;
     let defaultZoom = config.defaultZoom;
     let rewardApplied = false;
+    let autoResetTimeoutId = null;
+
+    const cancelAutoReset = () => {
+        if (autoResetTimeoutId !== null) {
+            clearTimeout(autoResetTimeoutId);
+            autoResetTimeoutId = null;
+        }
+    };
+
+    const scheduleAutoReset = () => {
+        cancelAutoReset();
+
+        const autoResetUnlocked = (
+            progression.getSnapshot().unlocks.autoBoardReset
+        );
+        const gameFinished = game.getPublicState().status !== "playing";
+
+        if (
+            autoResetUnlocked &&
+            config.autoResetEnabled &&
+            gameFinished
+        ) {
+            autoResetTimeoutId = setTimeout(() => {
+                autoResetTimeoutId = null;
+                game.reset();
+            }, 1000);
+        }
+    };
 
     const updateResetZoomTitle = () => {
         resetZoomButton.title = (
@@ -56,6 +97,7 @@
         renderer.render(state);
 
         if (state.status === "playing") {
+            cancelAutoReset();
             rewardApplied = false;
             gameResultMessage.textContent = "";
             gameResult.hidden = true;
@@ -63,14 +105,21 @@
         }
 
         if (!rewardApplied) {
-            economy.addMinesDefused(state.minesDefusedReward);
+            const { reward } = progression.recordGame(state.result);
+            const signedReward = reward >= 0 ? `+${reward}` : reward;
+            const outcome = state.status === "won" ? "won" : "lost";
+
+            actionConsole.log(
+                `Game ${outcome} - mines defused: ${signedReward}.`,
+            );
             rewardApplied = true;
         }
 
         gameResultMessage.textContent = state.status === "won"
-            ? "You win!"
-            : "You lost!";
+            ? "you win!"
+            : "you lost.";
         gameResult.hidden = false;
+        scheduleAutoReset();
     };
 
     zoomInput.min = config.minZoom;
@@ -100,18 +149,45 @@
     });
 
     resetGameButton.addEventListener("click", () => {
+        cancelAutoReset();
         game.reset();
     });
 
+    unlockRandomSolverButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("randomSolver")) {
+            actionConsole.log("Upgrade purchased - random solver unlocked.");
+        }
+    });
+
+    unlockAutoResetButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoBoardReset")) {
+            actionConsole.log("Upgrade purchased - auto reset unlocked.");
+            scheduleAutoReset();
+        }
+    });
+
     solverEnabledInput.addEventListener("change", () => {
-        const enabled = config.setSolverEnabled(
+        config.setSolverEnabled(
             solverEnabledInput.checked,
         );
+        const solverUnlocked = (
+            progression.getSnapshot().unlocks.randomSolver
+        );
 
-        if (enabled) {
+        if (solverUnlocked && config.solverEnabled) {
             solver.start();
         } else {
             solver.stop();
+        }
+    });
+
+    autoResetEnabledInput.addEventListener("change", () => {
+        config.setAutoResetEnabled(autoResetEnabledInput.checked);
+
+        if (config.autoResetEnabled) {
+            scheduleAutoReset();
+        } else {
+            cancelAutoReset();
         }
     });
 
@@ -121,15 +197,34 @@
         game.applyAction,
     );
 
-    economy.subscribe((minesDefused) => {
-        minesDefusedOutput.value = minesDefused;
+    progression.subscribe((state) => {
+        const solverUnlocked = state.unlocks.randomSolver;
+        const autoResetUnlocked = state.unlocks.autoBoardReset;
+        minesDefusedOutput.value = state.currencies.minesDefused;
+        unlockRandomSolverButton.hidden = solverUnlocked;
+        unlockRandomSolverButton.disabled = (
+            !progression.canPurchaseUpgrade("randomSolver")
+        );
+        unlockAutoResetButton.hidden = autoResetUnlocked;
+        unlockAutoResetButton.disabled = (
+            !progression.canPurchaseUpgrade("autoBoardReset")
+        );
+        solverEnabledInput.disabled = !solverUnlocked;
+        solverEnabledInput.checked = config.solverEnabled;
+        autoResetEnabledInput.disabled = !autoResetUnlocked;
+        autoResetEnabledInput.checked = config.autoResetEnabled;
+
+        if (solverUnlocked && config.solverEnabled) {
+            solver.start();
+        } else {
+            solver.stop();
+        }
+
+        if (!autoResetUnlocked) {
+            cancelAutoReset();
+        }
     });
     game.subscribe(updateView);
     updateCanvasZoom(currentZoom);
     updateResetZoomTitle();
-    solverEnabledInput.checked = config.solverEnabled;
-
-    if (config.solverEnabled) {
-        solver.start();
-    }
 })();

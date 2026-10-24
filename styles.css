@@ -1,0 +1,118 @@
+canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+#action-console {
+    width: 100%;
+    height: calc(7em + 2px);
+    padding: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #555;
+    box-sizing: border-box;
+    background: #111;
+    color: #d7ffd7;
+    font-family: Consolas, "Courier New", monospace;
+    line-height: 1.2;
+}
+
+.console-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#game {
+    --control-scale: 1;
+    width: 144px;
+}
+
+#minesweeper {
+    display: block;
+}
+
+#board {
+    position: relative;
+    width: 100%;
+}
+
+#game-result {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgb(0 0 0 / 50%);
+    text-align: center;
+    font-size: calc(1rem * var(--control-scale));
+}
+
+#game-result[hidden] {
+    display: none;
+}
+
+#game-result p {
+    margin: 0;
+    font-weight: bold;
+    color: white;
+}
+
+#zoom-controls {
+    display: grid;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+}
+
+#zoom-controls label {
+    text-align: center;
+}
+
+#zoom-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: calc(0.25rem * var(--control-scale));
+    width: 100%;
+    font-size: calc(1rem * var(--control-scale));
+}
+
+#zoom-controls input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#zoom-row button {
+    min-width: 0;
+    padding: 0.125rem 0.25rem;
+    box-sizing: border-box;
+}
+
+#upgrade-controls {
+    display: grid;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+}
+
+#upgrade-controls button {
+    width: 100%;
+    font-size: calc(1rem * var(--control-scale));
+    box-sizing: border-box;
+}
+
+#solver-control,
+#auto-reset-control {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    margin-top: 0.5rem;
+    font-size: calc(1rem * var(--control-scale));
+    box-sizing: border-box;
+}

@@ -41,8 +41,6 @@
         mineCount = 10,
         random = Math.random,
     } = {}) => {
-        const incorrectFlagPenalty = 2;
-        const hitMinePenaltyRate = 0.4;
         const cellCount = width * height;
         const listeners = new Set();
         let mineGrid;
@@ -50,7 +48,7 @@
         let cellMarks;
         let status;
         let hitMineIndex;
-        let minesDefusedReward;
+        let gameResult;
 
         const generateBoard = () => {
             mineGrid = namespace.createMineGrid({
@@ -63,7 +61,7 @@
             cellMarks = Array(cellCount).fill(null);
             status = "playing";
             hitMineIndex = -1;
-            minesDefusedReward = 0;
+            gameResult = null;
         };
 
         const countProperlyFlaggedMines = () => mineGrid.reduce(
@@ -82,19 +80,13 @@
 
         const finishGame = (outcome) => {
             status = outcome;
-            const correctFlagReward = countProperlyFlaggedMines();
-            const incorrectFlagsPenalty = (
-                countIncorrectlyFlaggedCells() * incorrectFlagPenalty
-            );
-            const hitMinePenalty = outcome === "lost"
-                ? Math.ceil(mineCount * hitMinePenaltyRate)
-                : 0;
-
-            minesDefusedReward = (
-                correctFlagReward -
-                incorrectFlagsPenalty -
-                hitMinePenalty
-            );
+            gameResult = Object.freeze({
+                outcome,
+                startingMines: mineCount,
+                correctlyFlagged: countProperlyFlaggedMines(),
+                incorrectlyFlagged: countIncorrectlyFlaggedCells(),
+                hitMine: outcome === "lost" && hitMineIndex >= 0,
+            });
         };
 
         const countAdjacentMines = (index) => getAdjacentIndexes(
@@ -252,7 +244,7 @@
             height,
             mineCount,
             status,
-            minesDefusedReward,
+            result: gameResult ? { ...gameResult } : null,
             cells: Array.from(
                 { length: cellCount },
                 (_, index) => getCellState(index),
