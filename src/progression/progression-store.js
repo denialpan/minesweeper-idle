@@ -103,7 +103,7 @@
 
     namespace.createProgressionStore = () => {
         const listeners = new Set();
-        const state = loadState();
+        let state = loadState();
 
         const getSnapshot = () => ({
             version: state.version,
@@ -180,6 +180,20 @@
             return true;
         };
 
+        const resetProgression = () => {
+            state = createDefaultState();
+            save();
+            notify();
+        };
+
+        const setMinesDefused = (amount) => {
+            state.currencies.minesDefused = toNonNegativeInteger(amount);
+            save();
+            notify();
+
+            return state.currencies.minesDefused;
+        };
+
         const subscribe = (listener) => {
             listeners.add(listener);
             listener(getSnapshot());
@@ -196,6 +210,8 @@
             getSnapshot,
             purchaseUpgrade,
             recordGame,
+            resetProgression,
+            setMinesDefused,
             subscribe,
         });
     };

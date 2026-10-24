@@ -256,6 +256,43 @@
             listeners.forEach((listener) => listener(publicState));
         };
 
+        const prepareDebugBoard = () => {
+            generateBoard();
+            notify();
+        };
+
+        const debugForceWin = () => {
+            prepareDebugBoard();
+
+            mineGrid.forEach((hasMine, index) => {
+                if (!hasMine) {
+                    revealedCells[index] = true;
+                    cellMarks[index] = null;
+                }
+            });
+
+            finishGame("won");
+            notify();
+        };
+
+        const debugForceLoss = (withIncorrectFlags = false) => {
+            prepareDebugBoard();
+
+            if (withIncorrectFlags) {
+                mineGrid
+                    .map((hasMine, index) => ({ hasMine, index }))
+                    .filter(({ hasMine }) => !hasMine)
+                    .slice(0, 2)
+                    .forEach(({ index }) => {
+                        cellMarks[index] = "flag";
+                    });
+            }
+
+            hitMineIndex = mineGrid.findIndex(Boolean);
+            finishGame("lost");
+            notify();
+        };
+
         const isValidIndex = (index) => (
             Number.isInteger(index) &&
             index >= 0 &&
@@ -302,6 +339,8 @@
 
         return Object.freeze({
             applyAction,
+            debugForceLoss,
+            debugForceWin,
             getPublicState,
             reset,
             subscribe,

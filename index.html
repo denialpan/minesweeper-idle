@@ -7,6 +7,33 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <aside id="debug-panel">
+        <label for="debug-enabled">
+            <input id="debug-enabled" type="checkbox">
+            Debug
+        </label>
+        <div id="debug-controls" hidden>
+            <button id="debug-reset-save" type="button">
+                Reset local save
+            </button>
+            <button id="debug-force-win" type="button">Force win</button>
+            <button id="debug-force-loss" type="button">Force loss</button>
+            <button id="debug-force-bad-flags" type="button">
+                Mine hit with incorrect flags
+            </button>
+            <label for="debug-currency">Mines defused</label>
+            <input
+                id="debug-currency"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+            >
+            <button id="debug-set-currency" type="button">
+                Set currency
+            </button>
+        </div>
+    </aside>
     <section
         id="action-console"
         role="log"

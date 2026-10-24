@@ -54,10 +54,19 @@
         }
     };
 
+    const reset = () => {
+        values.zoom = builtInZoom;
+        values.defaultZoom = builtInZoom;
+        values.solverEnabled = true;
+        values.autoResetEnabled = false;
+        save();
+    };
+
     namespace.config = Object.freeze({
         minZoom,
         maxZoom,
         normalizeZoom,
+        reset,
 
         get zoom() {
             return values.zoom;

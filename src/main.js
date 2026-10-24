@@ -4,6 +4,24 @@
     const minesweeperCanvas = document.getElementById("minesweeper");
     const gameElement = document.getElementById("game");
     const actionConsoleElement = document.getElementById("action-console");
+    const debugEnabledInput = document.getElementById("debug-enabled");
+    const debugControls = document.getElementById("debug-controls");
+    const debugResetSaveButton = document.getElementById(
+        "debug-reset-save",
+    );
+    const debugForceWinButton = document.getElementById(
+        "debug-force-win",
+    );
+    const debugForceLossButton = document.getElementById(
+        "debug-force-loss",
+    );
+    const debugForceBadFlagsButton = document.getElementById(
+        "debug-force-bad-flags",
+    );
+    const debugCurrencyInput = document.getElementById("debug-currency");
+    const debugSetCurrencyButton = document.getElementById(
+        "debug-set-currency",
+    );
     const minesDefusedOutput = document.getElementById("mines-defused");
     const gameResult = document.getElementById("game-result");
     const gameResultMessage = document.getElementById(
@@ -167,6 +185,51 @@
         game.reset();
     });
 
+    debugEnabledInput.addEventListener("change", () => {
+        debugControls.hidden = !debugEnabledInput.checked;
+    });
+
+    debugResetSaveButton.addEventListener("click", () => {
+        const confirmed = window.confirm(
+            "Reset all saved progression, currency, and upgrades?",
+        );
+
+        if (confirmed) {
+            cancelAutoReset();
+            config.reset();
+            currentZoom = config.zoom;
+            defaultZoom = config.defaultZoom;
+            updateCanvasZoom(currentZoom);
+            updateResetZoomTitle();
+            progression.resetProgression();
+            game.reset();
+            actionConsole.log("Debug - local progression save reset.");
+        }
+    });
+
+    debugForceWinButton.addEventListener("click", () => {
+        game.debugForceWin();
+    });
+
+    debugForceLossButton.addEventListener("click", () => {
+        game.debugForceLoss();
+    });
+
+    debugForceBadFlagsButton.addEventListener("click", () => {
+        game.debugForceLoss(true);
+    });
+
+    debugSetCurrencyButton.addEventListener("click", () => {
+        if (Number.isFinite(debugCurrencyInput.valueAsNumber)) {
+            const currency = progression.setMinesDefused(
+                debugCurrencyInput.valueAsNumber,
+            );
+            actionConsole.log(
+                `Debug - mines defused set to ${currency}.`,
+            );
+        }
+    });
+
     unlockRandomSolverButton.addEventListener("click", () => {
         if (progression.purchaseUpgrade("randomSolver")) {
             actionConsole.log("Upgrade purchased - random solver unlocked.");
@@ -215,6 +278,7 @@
         const solverUnlocked = state.unlocks.randomSolver;
         const autoResetUnlocked = state.unlocks.autoBoardReset;
         minesDefusedOutput.value = state.currencies.minesDefused;
+        debugCurrencyInput.value = state.currencies.minesDefused;
         unlockRandomSolverButton.hidden = solverUnlocked;
         unlockRandomSolverButton.disabled = (
             !progression.canPurchaseUpgrade("randomSolver")

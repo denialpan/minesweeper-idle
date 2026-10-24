@@ -3,6 +3,33 @@ canvas {
     image-rendering: crisp-edges;
 }
 
+#debug-panel {
+    position: fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+    padding: 0.5rem;
+    border: 1px solid #777;
+    background: white;
+}
+
+#debug-controls {
+    display: grid;
+    gap: 0.25rem;
+    width: 14rem;
+    margin-top: 0.5rem;
+}
+
+#debug-controls[hidden] {
+    display: none;
+}
+
+#debug-controls input,
+#debug-controls button {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 #action-console {
     width: 100%;
     height: calc(7em + 2px);
