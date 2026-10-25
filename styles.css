@@ -135,6 +135,8 @@ canvas {
 }
 
 #upgrade-controls button {
+    border-width: 1px;
+    border-style: solid;
     width: 100%;
     font-size: calc(1rem * var(--control-scale));
     box-sizing: border-box;
