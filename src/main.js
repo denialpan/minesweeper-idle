@@ -3,6 +3,7 @@
     const { config } = namespace;
     const minesweeperCanvas = document.getElementById("minesweeper");
     const gameElement = document.getElementById("game");
+    const boardColumn = document.getElementById("board-column");
     const actionConsoleElement = document.getElementById("action-console");
     const debugEnabledInput = document.getElementById("debug-enabled");
     const debugControls = document.getElementById("debug-controls");
@@ -33,23 +34,43 @@
     const setDefaultZoomButton = document.getElementById(
         "set-default-zoom",
     );
-    const unlockRandomSolverButton = document.getElementById(
-        "unlock-random-solver",
+    const unlockSafeSolverButton = document.getElementById(
+        "unlock-safe-solver",
     );
     const unlockAutoResetButton = document.getElementById(
         "unlock-auto-reset",
     );
+    const unlockBoard9x9Button = document.getElementById(
+        "unlock-board-9x9",
+    );
+    const unlockFirstClickSafeButton = document.getElementById(
+        "unlock-first-click-safe",
+    );
     const solverEnabledInput = document.getElementById("solver-enabled");
+    const solverControl = document.getElementById("solver-control");
     const autoResetEnabledInput = document.getElementById(
         "auto-reset-enabled",
     );
-    const game = namespace.createMinesweeperGame();
+    const autoResetControl = document.getElementById(
+        "auto-reset-control",
+    );
     const progression = namespace.createProgressionStore();
+    const initialProgression = progression.getSnapshot();
+    const initialBoardSize = initialProgression.unlocks.board9x9
+        ? 9
+        : 7;
+    const initialMineCount = initialBoardSize === 9 ? 10 : 6;
+    const game = namespace.createMinesweeperGame({
+        width: initialBoardSize,
+        height: initialBoardSize,
+        mineCount: initialMineCount,
+        firstRevealSafe: initialProgression.unlocks.firstClickSafe,
+    });
     const renderer = namespace.createCanvasRenderer(minesweeperCanvas);
     const actionConsole = namespace.createActionConsole(
         actionConsoleElement,
     );
-    const solver = namespace.createRandomSolver({
+    const solver = namespace.createSafeSolver({
         getState: game.getPublicState,
         applyAction: game.applyAction,
     });
@@ -91,6 +112,18 @@
         );
     };
 
+    const applyCanvasScale = (zoom) => {
+        const scaledWidth = minesweeperCanvas.width * zoom;
+        const scaledHeight = minesweeperCanvas.height * zoom;
+        minesweeperCanvas.style.width = `${scaledWidth}px`;
+        minesweeperCanvas.style.height = `${scaledHeight}px`;
+        boardColumn.style.width = `${scaledWidth}px`;
+        gameElement.style.setProperty(
+            "--control-scale",
+            Math.min(1, zoom),
+        );
+    };
+
     const updateCanvasZoom = (requestedZoom, formatInput = true) => {
         const zoom = config.setZoom(requestedZoom);
         const formattedZoom = zoom.toFixed(2);
@@ -100,19 +133,12 @@
             zoomInput.value = formattedZoom;
         }
 
-        const scaledWidth = minesweeperCanvas.width * zoom;
-        const scaledHeight = minesweeperCanvas.height * zoom;
-        minesweeperCanvas.style.width = `${scaledWidth}px`;
-        minesweeperCanvas.style.height = `${scaledHeight}px`;
-        gameElement.style.width = `${scaledWidth}px`;
-        gameElement.style.setProperty(
-            "--control-scale",
-            Math.min(1, zoom),
-        );
+        applyCanvasScale(zoom);
     };
 
     const updateView = (state) => {
         renderer.render(state);
+        applyCanvasScale(currentZoom);
 
         if (state.status === "playing") {
             cancelAutoReset();
@@ -230,9 +256,9 @@
         }
     });
 
-    unlockRandomSolverButton.addEventListener("click", () => {
-        if (progression.purchaseUpgrade("randomSolver")) {
-            actionConsole.log("Upgrade purchased - random solver unlocked.");
+    unlockSafeSolverButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("safeSolver")) {
+            actionConsole.log("Upgrade purchased - safe solver unlocked.");
         }
     });
 
@@ -243,12 +269,24 @@
         }
     });
 
+    unlockBoard9x9Button.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("board9x9")) {
+            actionConsole.log("Upgrade purchased - 9x9 board unlocked.");
+        }
+    });
+
+    unlockFirstClickSafeButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("firstClickSafe")) {
+            actionConsole.log("Upgrade purchased - first click safe unlocked.");
+        }
+    });
+
     solverEnabledInput.addEventListener("change", () => {
         config.setSolverEnabled(
             solverEnabledInput.checked,
         );
         const solverUnlocked = (
-            progression.getSnapshot().unlocks.randomSolver
+            progression.getSnapshot().unlocks.safeSolver
         );
 
         if (solverUnlocked && config.solverEnabled) {
@@ -275,21 +313,33 @@
     );
 
     progression.subscribe((state) => {
-        const solverUnlocked = state.unlocks.randomSolver;
+        const solverUnlocked = state.unlocks.safeSolver;
         const autoResetUnlocked = state.unlocks.autoBoardReset;
+        const board9x9Unlocked = state.unlocks.board9x9;
+        const firstClickSafeUnlocked = state.unlocks.firstClickSafe;
         minesDefusedOutput.value = state.currencies.minesDefused;
         debugCurrencyInput.value = state.currencies.minesDefused;
-        unlockRandomSolverButton.hidden = solverUnlocked;
-        unlockRandomSolverButton.disabled = (
-            !progression.canPurchaseUpgrade("randomSolver")
+        unlockSafeSolverButton.hidden = solverUnlocked;
+        unlockSafeSolverButton.disabled = (
+            !progression.canPurchaseUpgrade("safeSolver")
         );
         unlockAutoResetButton.hidden = autoResetUnlocked;
         unlockAutoResetButton.disabled = (
             !progression.canPurchaseUpgrade("autoBoardReset")
         );
+        unlockBoard9x9Button.hidden = board9x9Unlocked;
+        unlockBoard9x9Button.disabled = (
+            !progression.canPurchaseUpgrade("board9x9")
+        );
+        unlockFirstClickSafeButton.hidden = firstClickSafeUnlocked;
+        unlockFirstClickSafeButton.disabled = (
+            !progression.canPurchaseUpgrade("firstClickSafe")
+        );
         solverEnabledInput.disabled = !solverUnlocked;
+        solverControl.hidden = !solverUnlocked;
         solverEnabledInput.checked = config.solverEnabled;
         autoResetEnabledInput.disabled = !autoResetUnlocked;
+        autoResetControl.hidden = !autoResetUnlocked;
         autoResetEnabledInput.checked = config.autoResetEnabled;
 
         if (solverUnlocked && config.solverEnabled) {
@@ -301,6 +351,13 @@
         if (!autoResetUnlocked) {
             cancelAutoReset();
         }
+
+        game.setBoardSize(
+            board9x9Unlocked ? 9 : 7,
+            board9x9Unlocked ? 9 : 7,
+            board9x9Unlocked ? 10 : 6,
+        );
+        game.setFirstRevealSafe(firstClickSafeUnlocked);
     });
     game.subscribe(updateView);
     updateCanvasZoom(currentZoom);

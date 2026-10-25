@@ -45,17 +45,6 @@
             }
 
             const { tileSize } = sprites;
-            const requiredWidth = latestState.width * tileSize;
-            const requiredHeight = latestState.height * tileSize;
-
-            if (canvas.width !== requiredWidth) {
-                canvas.width = requiredWidth;
-            }
-
-            if (canvas.height !== requiredHeight) {
-                canvas.height = requiredHeight;
-            }
-
             const context = canvas.getContext("2d");
             context.imageSmoothingEnabled = false;
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -81,6 +70,21 @@
 
         const render = (state) => {
             latestState = state;
+            const requiredWidth = state.width * sprites.tileSize;
+            const requiredHeight = state.height * sprites.tileSize;
+
+            if (canvas.width !== requiredWidth) {
+                canvas.width = requiredWidth;
+            }
+
+            if (canvas.height !== requiredHeight) {
+                canvas.height = requiredHeight;
+            }
+
+            canvas.setAttribute(
+                "aria-label",
+                `${state.width} by ${state.height} Minesweeper grid`,
+            );
             draw();
         };
 

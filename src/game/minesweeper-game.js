@@ -40,8 +40,9 @@
         height = 9,
         mineCount = 10,
         random = Math.random,
+        firstRevealSafe = false,
     } = {}) => {
-        const cellCount = width * height;
+        let cellCount = width * height;
         const listeners = new Set();
         let mineGrid;
         let revealedCells;
@@ -49,19 +50,32 @@
         let status;
         let hitMineIndex;
         let gameResult;
+        let boardGenerated;
 
-        const generateBoard = () => {
+        const placeMines = (excludedIndexes = []) => {
             mineGrid = namespace.createMineGrid({
                 width,
                 height,
                 mineCount,
                 random,
+                excludedIndexes,
             });
+            boardGenerated = true;
+        };
+
+        const generateBoard = () => {
             revealedCells = Array(cellCount).fill(false);
             cellMarks = Array(cellCount).fill(null);
             status = "playing";
             hitMineIndex = -1;
             gameResult = null;
+
+            if (firstRevealSafe) {
+                mineGrid = Array(cellCount).fill(false);
+                boardGenerated = false;
+            } else {
+                placeMines();
+            }
         };
 
         const countProperlyFlaggedMines = () => mineGrid.reduce(
@@ -139,6 +153,10 @@
                 return false;
             }
 
+            if (!boardGenerated) {
+                placeMines([index]);
+            }
+
             const changed = revealFrom(index);
 
             if (status === "playing" && hasWon()) {
@@ -146,6 +164,35 @@
             }
 
             return changed;
+        };
+
+        const revealNextSafeCell = () => {
+            if (status !== "playing") {
+                return false;
+            }
+
+            if (!boardGenerated) {
+                placeMines();
+            }
+
+            const index = mineGrid.findIndex((hasMine, cellIndex) => (
+                !hasMine &&
+                !revealedCells[cellIndex] &&
+                cellMarks[cellIndex] !== "flag"
+            ));
+
+            if (index < 0) {
+                return false;
+            }
+
+            cellMarks[index] = null;
+            revealedCells[index] = true;
+
+            if (hasWon()) {
+                finishGame("won");
+            }
+
+            return true;
         };
 
         const chord = (index) => {
@@ -258,6 +305,11 @@
 
         const prepareDebugBoard = () => {
             generateBoard();
+
+            if (!boardGenerated) {
+                placeMines();
+            }
+
             notify();
         };
 
@@ -300,13 +352,17 @@
         );
 
         const applyAction = (action) => {
-            if (!action || !isValidIndex(action.index)) {
+            if (!action) {
                 return false;
             }
 
             let changed = false;
 
-            if (action.type === "reveal") {
+            if (action.type === "reveal-next-safe") {
+                changed = revealNextSafeCell();
+            } else if (!isValidIndex(action.index)) {
+                return false;
+            } else if (action.type === "reveal") {
                 changed = reveal(action.index);
             } else if (action.type === "chord") {
                 changed = chord(action.index);
@@ -326,6 +382,55 @@
             notify();
         };
 
+        const setBoardSize = (
+            nextWidth,
+            nextHeight,
+            nextMineCount = mineCount,
+        ) => {
+            if (
+                !Number.isInteger(nextWidth) ||
+                !Number.isInteger(nextHeight) ||
+                !Number.isInteger(nextMineCount) ||
+                nextWidth <= 0 ||
+                nextHeight <= 0 ||
+                nextMineCount < 0 ||
+                nextMineCount >= nextWidth * nextHeight
+            ) {
+                return false;
+            }
+
+            if (
+                width === nextWidth &&
+                height === nextHeight &&
+                mineCount === nextMineCount
+            ) {
+                return false;
+            }
+
+            width = nextWidth;
+            height = nextHeight;
+            mineCount = nextMineCount;
+            cellCount = width * height;
+            generateBoard();
+            notify();
+
+            return true;
+        };
+
+        const setFirstRevealSafe = (enabled) => {
+            const normalizedEnabled = Boolean(enabled);
+
+            if (firstRevealSafe === normalizedEnabled) {
+                return false;
+            }
+
+            firstRevealSafe = normalizedEnabled;
+            generateBoard();
+            notify();
+
+            return true;
+        };
+
         const subscribe = (listener) => {
             listeners.add(listener);
             listener(getPublicState());
@@ -343,6 +448,8 @@
             debugForceWin,
             getPublicState,
             reset,
+            setBoardSize,
+            setFirstRevealSafe,
             subscribe,
         });
     };

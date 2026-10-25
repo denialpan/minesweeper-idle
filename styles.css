@@ -51,7 +51,15 @@ canvas {
 
 #game {
     --control-scale: 1;
-    width: 144px;
+    display: grid;
+    grid-template-columns: auto 14rem 14rem;
+    align-items: start;
+    gap: 1rem;
+    width: max-content;
+}
+
+#board-column {
+    width: 112px;
 }
 
 #minesweeper {
@@ -122,8 +130,7 @@ canvas {
 #upgrade-controls {
     display: grid;
     gap: 0.5rem;
-    width: 100%;
-    margin-top: 0.5rem;
+    width: 14rem;
     box-sizing: border-box;
 }
 
@@ -133,13 +140,22 @@ canvas {
     box-sizing: border-box;
 }
 
+#toggle-controls {
+    display: grid;
+    gap: 0.5rem;
+    width: 14rem;
+}
+
+#toggle-controls [hidden] {
+    display: none;
+}
+
 #solver-control,
 #auto-reset-control {
     display: flex;
     align-items: center;
     gap: 0.25rem;
     width: 100%;
-    margin-top: 0.5rem;
     font-size: calc(1rem * var(--control-scale));
     box-sizing: border-box;
 }

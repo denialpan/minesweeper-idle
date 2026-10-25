@@ -2,7 +2,7 @@
     const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
     const storageKey = "minesweeper-idle-progression";
     const legacyEconomyStorageKey = "minesweeper-idle-economy";
-    const saveVersion = 1;
+    const saveVersion = 4;
 
     const toNonNegativeInteger = (value) => (
         Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0
@@ -22,12 +22,16 @@
             minesHit: 0,
         },
         upgrades: {
-            randomSolver: 0,
+            safeSolver: 0,
             autoBoardReset: 0,
+            board9x9: 0,
+            firstClickSafe: 0,
         },
         unlocks: {
-            randomSolver: false,
+            safeSolver: false,
             autoBoardReset: false,
+            board9x9: false,
+            firstClickSafe: false,
         },
     });
 
@@ -64,9 +68,13 @@
             statistics.minesHit,
         );
         Object.values(namespace.upgradeDefinitions).forEach((definition) => {
+            const storedUpgradeLevel = definition.id === "safeSolver"
+                ? upgrades.safeSolver ?? upgrades.randomSolver
+                : upgrades[definition.id];
+
             state.upgrades[definition.id] = Math.min(
                 definition.maximumLevel,
-                toNonNegativeInteger(upgrades[definition.id]),
+                toNonNegativeInteger(storedUpgradeLevel),
             );
             state.unlocks[definition.unlock] = (
                 state.upgrades[definition.id] > 0

@@ -43,44 +43,54 @@
     <main>
         <p>Mines defused: <output id="mines-defused">0</output></p>
         <div id="game">
-            <div id="board">
-                <canvas id="minesweeper" width="144" height="144" aria-label="9 by 9 Minesweeper grid"></canvas>
-                <div id="game-result" role="status" aria-live="polite" hidden>
-                    <p id="game-result-message"></p>
-                    <button id="reset-game" type="button">new board</button>
-                </div>
-            </div>
-            <div id="zoom-controls">
-                <div id="zoom-row">
-                    <label for="zoom-input">Zoom:</label>
-                    <input
-                        id="zoom-input"
-                        type="number"
-                        min="0.5"
-                        max="5"
-                        value="1"
-                        step="0.01"
-                    >
-                    <button id="reset-zoom" type="button" title="Reset zoom" aria-label="Reset zoom">↺</button>
-                    <button id="set-default-zoom" type="button" title="Set current zoom as default" aria-label="Set current zoom as default">★</button>
+            <div id="board-column">
+                <div id="board">
+                    <canvas id="minesweeper" width="112" height="112" aria-label="7 by 7 Minesweeper grid"></canvas>
+                    <div id="game-result" role="status" aria-live="polite" hidden>
+                        <p id="game-result-message"></p>
+                        <button id="reset-game" type="button">new board</button>
+                    </div>
                 </div>
             </div>
             <div id="upgrade-controls">
-                <button id="unlock-random-solver" type="button">
-                    Unlock random solver (10 mines)
+                <button id="unlock-safe-solver" type="button">
+                    Unlock safe solver (10 mines)
                 </button>
                 <button id="unlock-auto-reset" type="button">
                     Unlock auto reset (10 mines)
                 </button>
+                <button id="unlock-board-9x9" type="button">
+                    Unlock 9x9 board (25 mines)
+                </button>
+                <button id="unlock-first-click-safe" type="button">
+                    Unlock first click safe (50 mines)
+                </button>
             </div>
-            <label id="solver-control" for="solver-enabled">
-                <input id="solver-enabled" type="checkbox" checked disabled>
-                auto solver
-            </label>
-            <label id="auto-reset-control" for="auto-reset-enabled">
-                <input id="auto-reset-enabled" type="checkbox" disabled>
-                auto reset after 1 second
-            </label>
+            <div id="toggle-controls">
+                <div id="zoom-controls">
+                    <div id="zoom-row">
+                        <label for="zoom-input">Zoom:</label>
+                        <input
+                            id="zoom-input"
+                            type="number"
+                            min="0.5"
+                            max="5"
+                            value="1"
+                            step="0.01"
+                        >
+                        <button id="reset-zoom" type="button" title="Reset zoom" aria-label="Reset zoom">↺</button>
+                        <button id="set-default-zoom" type="button" title="Set current zoom as default" aria-label="Set current zoom as default">★</button>
+                    </div>
+                </div>
+                <label id="solver-control" for="solver-enabled" hidden>
+                    <input id="solver-enabled" type="checkbox" checked disabled>
+                    safe solver
+                </label>
+                <label id="auto-reset-control" for="auto-reset-enabled" hidden>
+                    <input id="auto-reset-enabled" type="checkbox" disabled>
+                    auto reset after 1 second
+                </label>
+            </div>
         </div>
     </main>
 
@@ -90,7 +100,7 @@
     <script src="src/rendering/canvas-renderer.js"></script>
     <script src="src/rendering/action-console.js"></script>
     <script src="src/input/mouse-controller.js"></script>
-    <script src="src/solvers/random-solver.js"></script>
+    <script src="src/solvers/safe-solver.js"></script>
     <script src="src/progression/upgrade-definitions.js"></script>
     <script src="src/progression/progression-rules.js"></script>
     <script src="src/progression/progression-store.js"></script>
