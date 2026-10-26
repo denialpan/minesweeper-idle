@@ -41,6 +41,8 @@
         mineCount = 10,
         random = Math.random,
         firstRevealSafe = false,
+        autoSolveExpansion = false,
+        autoSolveAlgorithm = "sequential",
     } = {}) => {
         let cellCount = width * height;
         const listeners = new Set();
@@ -99,6 +101,8 @@
                 startingMines: mineCount,
                 correctlyFlagged: countProperlyFlaggedMines(),
                 incorrectlyFlagged: countIncorrectlyFlaggedCells(),
+                revealedCells: revealedCells.filter(Boolean).length,
+                boardCells: cellCount,
                 hitMine: outcome === "lost" && hitMineIndex >= 0,
             });
         };
@@ -166,7 +170,7 @@
             return changed;
         };
 
-        const revealNextSafeCell = () => {
+        const autoSolve = () => {
             if (status !== "playing") {
                 return false;
             }
@@ -175,18 +179,43 @@
                 placeMines();
             }
 
-            const index = mineGrid.findIndex((hasMine, cellIndex) => (
-                !hasMine &&
-                !revealedCells[cellIndex] &&
-                cellMarks[cellIndex] !== "flag"
-            ));
+            const validIndexes = mineGrid.reduce(
+                (indexes, hasMine, cellIndex) => {
+                    if (
+                        !hasMine &&
+                        !revealedCells[cellIndex] &&
+                        cellMarks[cellIndex] !== "flag"
+                    ) {
+                        indexes.push(cellIndex);
+                    }
 
-            if (index < 0) {
+                    return indexes;
+                },
+                [],
+            );
+
+            if (validIndexes.length === 0) {
                 return false;
             }
 
-            cellMarks[index] = null;
-            revealedCells[index] = true;
+            let index = validIndexes[0];
+
+            if (autoSolveAlgorithm === "random") {
+                const randomValue = Math.min(
+                    1 - Number.EPSILON,
+                    Math.max(0, random()),
+                );
+                index = validIndexes[
+                    Math.floor(randomValue * validIndexes.length)
+                ];
+            }
+
+            if (autoSolveExpansion) {
+                revealFrom(index);
+            } else {
+                cellMarks[index] = null;
+                revealedCells[index] = true;
+            }
 
             if (hasWon()) {
                 finishGame("won");
@@ -248,12 +277,6 @@
             const adjacentMines = mineGrid[index]
                 ? null
                 : countAdjacentMines(index);
-
-            if (status === "won") {
-                return mineGrid[index]
-                    ? { state: "flagged", adjacentMines }
-                    : { state: "revealed", adjacentMines };
-            }
 
             if (status === "lost") {
                 if (mineGrid[index]) {
@@ -358,8 +381,8 @@
 
             let changed = false;
 
-            if (action.type === "reveal-next-safe") {
-                changed = revealNextSafeCell();
+            if (action.type === "auto-solve") {
+                changed = autoSolve();
             } else if (!isValidIndex(action.index)) {
                 return false;
             } else if (action.type === "reveal") {
@@ -431,6 +454,33 @@
             return true;
         };
 
+        const setAutoSolveExpansion = (enabled) => {
+            const normalizedEnabled = Boolean(enabled);
+
+            if (autoSolveExpansion === normalizedEnabled) {
+                return false;
+            }
+
+            autoSolveExpansion = normalizedEnabled;
+            return true;
+        };
+
+        const setAutoSolveAlgorithm = (algorithm) => {
+            if (
+                algorithm !== "sequential" &&
+                algorithm !== "random"
+            ) {
+                return false;
+            }
+
+            if (autoSolveAlgorithm === algorithm) {
+                return false;
+            }
+
+            autoSolveAlgorithm = algorithm;
+            return true;
+        };
+
         const subscribe = (listener) => {
             listeners.add(listener);
             listener(getPublicState());
@@ -448,6 +498,8 @@
             debugForceWin,
             getPublicState,
             reset,
+            setAutoSolveAlgorithm,
+            setAutoSolveExpansion,
             setBoardSize,
             setFirstRevealSafe,
             subscribe,

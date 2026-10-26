@@ -4,6 +4,10 @@
     const minZoom = 0.5;
     const maxZoom = 5;
     const builtInZoom = 1;
+    const solverAlgorithms = Object.freeze([
+        "sequential",
+        "random",
+    ]);
 
     const normalizeZoom = (value, fallback = builtInZoom) => {
         const numericValue = Number(value);
@@ -20,10 +24,15 @@
         return Math.trunc(boundedValue * 100 + 1e-9) / 100;
     };
 
+    const normalizeSolverAlgorithm = (value) => (
+        solverAlgorithms.includes(value) ? value : "sequential"
+    );
+
     const values = {
         zoom: builtInZoom,
         defaultZoom: builtInZoom,
         solverEnabled: true,
+        solverAlgorithm: "sequential",
         autoResetEnabled: false,
     };
 
@@ -37,6 +46,10 @@
             if (typeof storedValues.solverEnabled === "boolean") {
                 values.solverEnabled = storedValues.solverEnabled;
             }
+
+            values.solverAlgorithm = normalizeSolverAlgorithm(
+                storedValues.solverAlgorithm,
+            );
 
             if (typeof storedValues.autoResetEnabled === "boolean") {
                 values.autoResetEnabled = storedValues.autoResetEnabled;
@@ -58,6 +71,7 @@
         values.zoom = builtInZoom;
         values.defaultZoom = builtInZoom;
         values.solverEnabled = true;
+        values.solverAlgorithm = "sequential";
         values.autoResetEnabled = false;
         save();
     };
@@ -80,6 +94,10 @@
             return values.solverEnabled;
         },
 
+        get solverAlgorithm() {
+            return values.solverAlgorithm;
+        },
+
         get autoResetEnabled() {
             return values.autoResetEnabled;
         },
@@ -100,6 +118,12 @@
             values.solverEnabled = Boolean(value);
             save();
             return values.solverEnabled;
+        },
+
+        setSolverAlgorithm(value) {
+            values.solverAlgorithm = normalizeSolverAlgorithm(value);
+            save();
+            return values.solverAlgorithm;
         },
 
         setAutoResetEnabled(value) {

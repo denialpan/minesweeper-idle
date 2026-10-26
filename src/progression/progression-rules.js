@@ -1,8 +1,7 @@
 (() => {
     const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
     const boardCompletionRewardRate = 1.5;
-    const incorrectFlagPenalty = 2;
-    const hitMinePenaltyRate = 0.4;
+    const startingLossRate = 0.5;
 
     const calculateBoardCompletionReward = (startingMines) => Math.floor(
         startingMines * boardCompletionRewardRate,
@@ -12,23 +11,26 @@
         calculateBoardCompletionReward,
 
         calculateMinesDefusedReward(result) {
-            const boardCompletionReward = result.outcome === "won"
-                ? calculateBoardCompletionReward(result.startingMines)
-                : 0;
-            const correctFlagReward = result.correctlyFlagged;
-            const incorrectFlagsPenalty = (
-                result.incorrectlyFlagged * incorrectFlagPenalty
-            );
-            const hitMinePenalty = result.hitMine
-                ? Math.ceil(result.startingMines * hitMinePenaltyRate)
-                : 0;
+            if (result.outcome === "won") {
+                return (
+                    calculateBoardCompletionReward(result.startingMines) +
+                    result.correctlyFlagged
+                );
+            }
 
-            return (
-                boardCompletionReward +
-                correctFlagReward -
-                incorrectFlagsPenalty -
-                hitMinePenalty
+            const revealedPercentage = result.boardCells > 0
+                ? result.revealedCells / result.boardCells
+                : 0;
+            const boardLoss = Math.max(
+                0,
+                (startingLossRate - revealedPercentage) *
+                    result.startingMines,
             );
+            const totalLoss = Math.ceil(
+                boardLoss + result.incorrectlyFlagged,
+            );
+
+            return -totalLoss;
         },
     });
 })();

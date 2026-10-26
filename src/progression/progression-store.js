@@ -2,7 +2,7 @@
     const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
     const storageKey = "minesweeper-idle-progression";
     const legacyEconomyStorageKey = "minesweeper-idle-economy";
-    const saveVersion = 4;
+    const saveVersion = 9;
 
     const toNonNegativeInteger = (value) => (
         Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0
@@ -22,14 +22,22 @@
             minesHit: 0,
         },
         upgrades: {
-            safeSolver: 0,
+            autoSolver: 0,
+            autoSolverSpeed: 0,
+            autoSolverExpansion: 0,
+            autoSolverRandom: 0,
             autoBoardReset: 0,
+            autoResetSpeed: 0,
             board9x9: 0,
             firstClickSafe: 0,
         },
         unlocks: {
-            safeSolver: false,
+            autoSolver: false,
+            autoSolverSpeed: false,
+            autoSolverExpansion: false,
+            autoSolverRandom: false,
             autoBoardReset: false,
+            autoResetSpeed: false,
             board9x9: false,
             firstClickSafe: false,
         },
@@ -68,8 +76,8 @@
             statistics.minesHit,
         );
         Object.values(namespace.upgradeDefinitions).forEach((definition) => {
-            const storedUpgradeLevel = definition.id === "safeSolver"
-                ? upgrades.safeSolver ?? upgrades.randomSolver
+            const storedUpgradeLevel = definition.id === "autoSolver"
+                ? upgrades.autoSolver ?? upgrades.safeSolver ?? upgrades.randomSolver
                 : upgrades[definition.id];
 
             state.upgrades[definition.id] = Math.min(
@@ -163,13 +171,35 @@
             });
         };
 
+        const getUpgradeCost = (upgradeId) => {
+            const definition = namespace.upgradeDefinitions[upgradeId];
+
+            if (!definition) {
+                return null;
+            }
+
+            const level = state.upgrades[upgradeId];
+            const costMultiplier = definition.costMultiplier || 1;
+            const scaledCost = definition.cost * costMultiplier ** level;
+
+            return Number.isFinite(scaledCost)
+                ? Math.ceil(scaledCost)
+                : Number.MAX_SAFE_INTEGER;
+        };
+
         const canPurchaseUpgrade = (upgradeId) => {
             const definition = namespace.upgradeDefinitions[upgradeId];
+            const cost = getUpgradeCost(upgradeId);
 
             return Boolean(
                 definition &&
+                cost !== null &&
+                (
+                    !definition.requiredUnlock ||
+                    state.unlocks[definition.requiredUnlock]
+                ) &&
                 state.upgrades[upgradeId] < definition.maximumLevel &&
-                state.currencies.minesDefused >= definition.cost,
+                state.currencies.minesDefused >= cost,
             );
         };
 
@@ -179,7 +209,8 @@
             }
 
             const definition = namespace.upgradeDefinitions[upgradeId];
-            state.currencies.minesDefused -= definition.cost;
+            const cost = getUpgradeCost(upgradeId);
+            state.currencies.minesDefused -= cost;
             state.upgrades[upgradeId] += 1;
             state.unlocks[definition.unlock] = true;
             save();
@@ -216,6 +247,7 @@
         return Object.freeze({
             canPurchaseUpgrade,
             getSnapshot,
+            getUpgradeCost,
             purchaseUpgrade,
             recordGame,
             resetProgression,

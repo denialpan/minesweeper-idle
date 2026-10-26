@@ -34,11 +34,23 @@
     const setDefaultZoomButton = document.getElementById(
         "set-default-zoom",
     );
-    const unlockSafeSolverButton = document.getElementById(
-        "unlock-safe-solver",
+    const unlockAutoSolverButton = document.getElementById(
+        "unlock-auto-solver",
+    );
+    const upgradeAutoSolverSpeedButton = document.getElementById(
+        "upgrade-auto-solver-speed",
+    );
+    const unlockAutoSolverExpansionButton = document.getElementById(
+        "unlock-auto-solver-expansion",
+    );
+    const unlockAutoSolverRandomButton = document.getElementById(
+        "unlock-auto-solver-random",
     );
     const unlockAutoResetButton = document.getElementById(
         "unlock-auto-reset",
+    );
+    const upgradeAutoResetSpeedButton = document.getElementById(
+        "upgrade-auto-reset-speed",
     );
     const unlockBoard9x9Button = document.getElementById(
         "unlock-board-9x9",
@@ -48,6 +60,15 @@
     );
     const solverEnabledInput = document.getElementById("solver-enabled");
     const solverControl = document.getElementById("solver-control");
+    const solverAlgorithmSelect = document.getElementById(
+        "solver-algorithm",
+    );
+    const solverAlgorithmControl = document.getElementById(
+        "solver-algorithm-control",
+    );
+    const solverAlgorithmRandomOption = document.getElementById(
+        "solver-algorithm-random",
+    );
     const autoResetEnabledInput = document.getElementById(
         "auto-reset-enabled",
     );
@@ -55,6 +76,9 @@
         "auto-reset-control",
     );
     const progression = namespace.createProgressionStore();
+    const autoResetSpeedDefinition = (
+        namespace.upgradeDefinitions.autoResetSpeed
+    );
     const initialProgression = progression.getSnapshot();
     const initialBoardSize = initialProgression.unlocks.board9x9
         ? 9
@@ -70,7 +94,7 @@
     const actionConsole = namespace.createActionConsole(
         actionConsoleElement,
     );
-    const solver = namespace.createSafeSolver({
+    const solver = namespace.createAutoSolver({
         getState: game.getPublicState,
         applyAction: game.applyAction,
     });
@@ -86,12 +110,25 @@
         }
     };
 
+    const getAutoResetSpeed = (level) => Math.min(
+        autoResetSpeedDefinition.maximumSpeedMultiplier,
+        autoResetSpeedDefinition.speedMultiplier ** level,
+    );
+
     const scheduleAutoReset = () => {
         cancelAutoReset();
 
-        const autoResetUnlocked = (
-            progression.getSnapshot().unlocks.autoBoardReset
+        const progressionState = progression.getSnapshot();
+        const autoResetUnlocked = progressionState.unlocks.autoBoardReset;
+        const autoResetSpeed = getAutoResetSpeed(
+            progressionState.upgrades.autoResetSpeed,
         );
+        const resetDelay = (
+            autoResetSpeed >=
+            autoResetSpeedDefinition.maximumSpeedMultiplier
+        )
+            ? 0
+            : 1000 / autoResetSpeed;
         const gameFinished = game.getPublicState().status !== "playing";
 
         if (
@@ -102,7 +139,7 @@
             autoResetTimeoutId = setTimeout(() => {
                 autoResetTimeoutId = null;
                 game.reset();
-            }, 1000);
+            }, resetDelay);
         }
     };
 
@@ -256,15 +293,62 @@
         }
     });
 
-    unlockSafeSolverButton.addEventListener("click", () => {
-        if (progression.purchaseUpgrade("safeSolver")) {
-            actionConsole.log("Upgrade purchased - safe solver unlocked.");
+    unlockAutoSolverButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoSolver")) {
+            actionConsole.log("Upgrade purchased - auto solver unlocked.");
+        }
+    });
+
+    upgradeAutoSolverSpeedButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoSolverSpeed")) {
+            const level = (
+                progression.getSnapshot().upgrades.autoSolverSpeed
+            );
+            const speed = 1.1 ** level;
+            actionConsole.log(
+                `Upgrade purchased - auto solve speed is ${speed.toFixed(2)}x.`,
+            );
+        }
+    });
+
+    unlockAutoSolverExpansionButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoSolverExpansion")) {
+            actionConsole.log(
+                "Upgrade purchased - auto solve expansion unlocked.",
+            );
+        }
+    });
+
+    unlockAutoSolverRandomButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoSolverRandom")) {
+            actionConsole.log(
+                "Upgrade purchased - random auto solve unlocked.",
+            );
         }
     });
 
     unlockAutoResetButton.addEventListener("click", () => {
         if (progression.purchaseUpgrade("autoBoardReset")) {
             actionConsole.log("Upgrade purchased - auto reset unlocked.");
+            scheduleAutoReset();
+        }
+    });
+
+    upgradeAutoResetSpeedButton.addEventListener("click", () => {
+        if (progression.purchaseUpgrade("autoResetSpeed")) {
+            const level = (
+                progression.getSnapshot().upgrades.autoResetSpeed
+            );
+            const speed = getAutoResetSpeed(level);
+            const speedDescription = (
+                speed >= autoResetSpeedDefinition.maximumSpeedMultiplier
+            )
+                ? "instant"
+                : `${speed.toFixed(2)}x`;
+
+            actionConsole.log(
+                `Upgrade purchased - auto reset is ${speedDescription}.`,
+            );
             scheduleAutoReset();
         }
     });
@@ -286,7 +370,7 @@
             solverEnabledInput.checked,
         );
         const solverUnlocked = (
-            progression.getSnapshot().unlocks.safeSolver
+            progression.getSnapshot().unlocks.autoSolver
         );
 
         if (solverUnlocked && config.solverEnabled) {
@@ -294,6 +378,19 @@
         } else {
             solver.stop();
         }
+    });
+
+    solverAlgorithmSelect.addEventListener("change", () => {
+        const randomUnlocked = (
+            progression.getSnapshot().unlocks.autoSolverRandom
+        );
+        const requestedAlgorithm = solverAlgorithmSelect.value;
+        const algorithm = requestedAlgorithm === "random" && !randomUnlocked
+            ? "sequential"
+            : requestedAlgorithm;
+
+        solverAlgorithmSelect.value = config.setSolverAlgorithm(algorithm);
+        game.setAutoSolveAlgorithm(config.solverAlgorithm);
     });
 
     autoResetEnabledInput.addEventListener("change", () => {
@@ -313,20 +410,83 @@
     );
 
     progression.subscribe((state) => {
-        const solverUnlocked = state.unlocks.safeSolver;
+        const solverUnlocked = state.unlocks.autoSolver;
+        const solverExpansionUnlocked = (
+            state.unlocks.autoSolverExpansion
+        );
+        const solverRandomUnlocked = state.unlocks.autoSolverRandom;
+        const solverSpeedLevel = state.upgrades.autoSolverSpeed;
+        const solverSpeed = 1.1 ** solverSpeedLevel;
+        const nextSolverSpeed = solverSpeed * 1.1;
+        const solverSpeedCost = progression.getUpgradeCost(
+            "autoSolverSpeed",
+        );
         const autoResetUnlocked = state.unlocks.autoBoardReset;
+        const autoResetSpeedLevel = state.upgrades.autoResetSpeed;
+        const autoResetSpeed = getAutoResetSpeed(autoResetSpeedLevel);
+        const nextAutoResetSpeed = getAutoResetSpeed(
+            autoResetSpeedLevel + 1,
+        );
+        const autoResetSpeedCost = progression.getUpgradeCost(
+            "autoResetSpeed",
+        );
+        const autoResetSpeedIsMaximum = (
+            autoResetSpeedLevel >= autoResetSpeedDefinition.maximumLevel
+        );
         const board9x9Unlocked = state.unlocks.board9x9;
         const firstClickSafeUnlocked = state.unlocks.firstClickSafe;
         minesDefusedOutput.value = state.currencies.minesDefused;
         debugCurrencyInput.value = state.currencies.minesDefused;
-        unlockSafeSolverButton.hidden = solverUnlocked;
-        unlockSafeSolverButton.disabled = (
-            !progression.canPurchaseUpgrade("safeSolver")
+        unlockAutoSolverButton.hidden = solverUnlocked;
+        unlockAutoSolverButton.disabled = (
+            !progression.canPurchaseUpgrade("autoSolver")
+        );
+        upgradeAutoSolverSpeedButton.hidden = !solverUnlocked;
+        upgradeAutoSolverSpeedButton.disabled = (
+            !progression.canPurchaseUpgrade("autoSolverSpeed")
+        );
+        upgradeAutoSolverSpeedButton.textContent = (
+            `Auto solve speed ${solverSpeed.toFixed(2)}× → ` +
+            `${nextSolverSpeed.toFixed(2)}× (${solverSpeedCost} mines)`
+        );
+        unlockAutoSolverExpansionButton.hidden = (
+            !solverUnlocked || solverExpansionUnlocked
+        );
+        unlockAutoSolverExpansionButton.disabled = (
+            !progression.canPurchaseUpgrade("autoSolverExpansion")
+        );
+        unlockAutoSolverRandomButton.hidden = (
+            !solverUnlocked || solverRandomUnlocked
+        );
+        unlockAutoSolverRandomButton.disabled = (
+            !progression.canPurchaseUpgrade("autoSolverRandom")
         );
         unlockAutoResetButton.hidden = autoResetUnlocked;
         unlockAutoResetButton.disabled = (
             !progression.canPurchaseUpgrade("autoBoardReset")
         );
+        upgradeAutoResetSpeedButton.hidden = !autoResetUnlocked;
+        upgradeAutoResetSpeedButton.disabled = (
+            !progression.canPurchaseUpgrade("autoResetSpeed")
+        );
+
+        if (autoResetSpeedIsMaximum) {
+            upgradeAutoResetSpeedButton.textContent = (
+                "Auto reset: instant (maximum)"
+            );
+        } else {
+            const nextSpeedLabel = (
+                nextAutoResetSpeed >=
+                autoResetSpeedDefinition.maximumSpeedMultiplier
+            )
+                ? "instant"
+                : `${nextAutoResetSpeed.toFixed(2)}×`;
+
+            upgradeAutoResetSpeedButton.textContent = (
+                `Auto reset speed ${autoResetSpeed.toFixed(2)}× → ` +
+                `${nextSpeedLabel} (${autoResetSpeedCost} mines)`
+            );
+        }
         unlockBoard9x9Button.hidden = board9x9Unlocked;
         unlockBoard9x9Button.disabled = (
             !progression.canPurchaseUpgrade("board9x9")
@@ -338,9 +498,21 @@
         solverEnabledInput.disabled = !solverUnlocked;
         solverControl.hidden = !solverUnlocked;
         solverEnabledInput.checked = config.solverEnabled;
+        solverAlgorithmControl.hidden = !solverUnlocked;
+        solverAlgorithmRandomOption.hidden = !solverRandomUnlocked;
+        solverAlgorithmRandomOption.disabled = !solverRandomUnlocked;
+
+        if (!solverRandomUnlocked && config.solverAlgorithm === "random") {
+            config.setSolverAlgorithm("sequential");
+        }
+
+        solverAlgorithmSelect.value = config.solverAlgorithm;
         autoResetEnabledInput.disabled = !autoResetUnlocked;
         autoResetControl.hidden = !autoResetUnlocked;
         autoResetEnabledInput.checked = config.autoResetEnabled;
+        solver.setSpeedMultiplier(solverSpeed);
+        game.setAutoSolveAlgorithm(config.solverAlgorithm);
+        game.setAutoSolveExpansion(solverExpansionUnlocked);
 
         if (solverUnlocked && config.solverEnabled) {
             solver.start();

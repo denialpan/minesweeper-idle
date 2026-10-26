@@ -161,3 +161,19 @@ canvas {
     font-size: calc(1rem * var(--control-scale));
     box-sizing: border-box;
 }
+
+#solver-algorithm-control {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.25rem;
+    width: 100%;
+    font-size: calc(1rem * var(--control-scale));
+    box-sizing: border-box;
+}
+
+#solver-algorithm {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}

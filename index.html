@@ -53,11 +53,27 @@
                 </div>
             </div>
             <div id="upgrade-controls">
-                <button id="unlock-safe-solver" type="button">
-                    Unlock safe solver (10 mines)
+                <button id="unlock-auto-solver" type="button">
+                    Unlock auto solver (10 mines)
+                </button>
+                <button id="upgrade-auto-solver-speed" type="button" hidden>
+                    Auto solve speed 1.00× → 1.10× (250 mines)
+                </button>
+                <button
+                    id="unlock-auto-solver-expansion"
+                    type="button"
+                    hidden
+                >
+                    Unlock auto solve expansion (1000 mines)
+                </button>
+                <button id="unlock-auto-solver-random" type="button" hidden>
+                    Unlock random auto solve (100 mines)
                 </button>
                 <button id="unlock-auto-reset" type="button">
                     Unlock auto reset (10 mines)
+                </button>
+                <button id="upgrade-auto-reset-speed" type="button" hidden>
+                    Auto reset speed 1.00× → 1.50× (100 mines)
                 </button>
                 <button id="unlock-board-9x9" type="button">
                     Unlock 9x9 board (25 mines)
@@ -84,7 +100,25 @@
                 </div>
                 <label id="solver-control" for="solver-enabled" hidden>
                     <input id="solver-enabled" type="checkbox" checked disabled>
-                    safe solver
+                    auto solve
+                </label>
+                <label
+                    id="solver-algorithm-control"
+                    for="solver-algorithm"
+                    hidden
+                >
+                    Algorithm:
+                    <select id="solver-algorithm">
+                        <option value="sequential">Sequential</option>
+                        <option
+                            id="solver-algorithm-random"
+                            value="random"
+                            hidden
+                            disabled
+                        >
+                            Random
+                        </option>
+                    </select>
                 </label>
                 <label id="auto-reset-control" for="auto-reset-enabled" hidden>
                     <input id="auto-reset-enabled" type="checkbox" disabled>
@@ -100,7 +134,7 @@
     <script src="src/rendering/canvas-renderer.js"></script>
     <script src="src/rendering/action-console.js"></script>
     <script src="src/input/mouse-controller.js"></script>
-    <script src="src/solvers/safe-solver.js"></script>
+    <script src="src/solvers/auto-solver.js"></script>
     <script src="src/progression/upgrade-definitions.js"></script>
     <script src="src/progression/progression-rules.js"></script>
     <script src="src/progression/progression-store.js"></script>
