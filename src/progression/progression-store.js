@@ -2,10 +2,16 @@
     const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
     const storageKey = "minesweeper-idle-progression";
     const legacyEconomyStorageKey = "minesweeper-idle-economy";
-    const saveVersion = 9;
+    const saveVersion = 10;
 
     const toNonNegativeInteger = (value) => (
         Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0
+    );
+
+    const toNonNegativeAmount = (value) => (
+        Number.isFinite(value)
+            ? Math.max(0, Math.round((value + Number.EPSILON) * 100) / 100)
+            : 0
     );
 
     const createDefaultState = () => ({
@@ -54,7 +60,7 @@
         const statistics = storedState.statistics || {};
         const upgrades = storedState.upgrades || {};
 
-        state.currencies.minesDefused = toNonNegativeInteger(
+        state.currencies.minesDefused = toNonNegativeAmount(
             currencies.minesDefused,
         );
         state.statistics.gamesPlayed = toNonNegativeInteger(
@@ -107,7 +113,7 @@
 
             if (legacyEconomy) {
                 migratedState.currencies.minesDefused = (
-                    toNonNegativeInteger(legacyEconomy.minesDefused)
+                    toNonNegativeAmount(legacyEconomy.minesDefused)
                 );
             }
 
@@ -148,8 +154,7 @@
                     .calculateMinesDefusedReward(result)
             );
 
-            state.currencies.minesDefused = Math.max(
-                0,
+            state.currencies.minesDefused = toNonNegativeAmount(
                 state.currencies.minesDefused + reward,
             );
             state.statistics.gamesPlayed += 1;
@@ -226,7 +231,7 @@
         };
 
         const setMinesDefused = (amount) => {
-            state.currencies.minesDefused = toNonNegativeInteger(amount);
+            state.currencies.minesDefused = toNonNegativeAmount(amount);
             save();
             notify();
 

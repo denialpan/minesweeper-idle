@@ -1,36 +1,35 @@
 (() => {
     const namespace = window.MinesweeperIdle = window.MinesweeperIdle || {};
-    const boardCompletionRewardRate = 1.5;
-    const startingLossRate = 0.5;
+    const properFlagReward = 1;
+    const misplacedFlagPenalty = 1;
 
-    const calculateBoardCompletionReward = (startingMines) => Math.floor(
-        startingMines * boardCompletionRewardRate,
+    const roundMines = (amount) => Math.round(
+        (amount + Number.EPSILON) * 100,
+    ) / 100;
+
+    const calculateMisplacedFlagPenalty = (incorrectlyFlagged) => roundMines(
+        incorrectlyFlagged * misplacedFlagPenalty,
+    );
+
+    const calculateProperFlagReward = (correctlyFlagged) => roundMines(
+        correctlyFlagged * properFlagReward,
     );
 
     namespace.progressionRules = Object.freeze({
-        calculateBoardCompletionReward,
+        calculateMisplacedFlagPenalty,
+        calculateProperFlagReward,
 
         calculateMinesDefusedReward(result) {
             if (result.outcome === "won") {
-                return (
-                    calculateBoardCompletionReward(result.startingMines) +
-                    result.correctlyFlagged
+                return roundMines(
+                    result.startingMines +
+                    calculateProperFlagReward(result.correctlyFlagged),
                 );
             }
 
-            const revealedPercentage = result.boardCells > 0
-                ? result.revealedCells / result.boardCells
-                : 0;
-            const boardLoss = Math.max(
-                0,
-                (startingLossRate - revealedPercentage) *
-                    result.startingMines,
+            return -calculateMisplacedFlagPenalty(
+                result.incorrectlyFlagged,
             );
-            const totalLoss = Math.ceil(
-                boardLoss + result.incorrectlyFlagged,
-            );
-
-            return -totalLoss;
         },
     });
 })();

@@ -103,6 +103,8 @@
     let rewardApplied = false;
     let autoResetTimeoutId = null;
 
+    const formatMines = (amount) => Number(amount.toFixed(2)).toString();
+
     const cancelAutoReset = () => {
         if (autoResetTimeoutId !== null) {
             clearTimeout(autoResetTimeoutId);
@@ -189,22 +191,24 @@
             const { reward } = progression.recordGame(state.result);
 
             if (state.status === "won") {
-                const completionReward = (
-                    namespace.progressionRules
-                        .calculateBoardCompletionReward(
-                            state.result.startingMines,
-                        )
-                );
-
                 actionConsole.log(
-                    "successfully defused! " + `+${state.result.correctlyFlagged}, bonus ` + `+${completionReward}.`
+                    `successfully defused: +${formatMines(reward)} mines.`,
                 );
             } else {
-                const loss = Math.max(0, -reward);
-
-                actionConsole.log(
-                    `mine hit! it blew up ${loss} mines from your supply.`,
+                const flagPenalty = (
+                    namespace.progressionRules
+                        .calculateMisplacedFlagPenalty(
+                            state.result.incorrectlyFlagged,
+                        )
                 );
+                const message = flagPenalty > 0
+                    ? (
+                        "mine hit! " +
+                        `-${formatMines(flagPenalty)} mines for wasting flags.`
+                    )
+                    : "mine hit!";
+
+                actionConsole.log(message);
             }
 
             rewardApplied = true;
